@@ -7,14 +7,14 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -28,13 +28,18 @@ public class BackupFileController {
     private final BackupConfigRepository backupConfigRepository;
 
     @GetMapping
-    public List<String> listBackupFiles() {
+    public List<Map<String, String>> listBackupFiles() {
         BackupConfig backupConfig = backupConfigRepository.findById(1L).get();
-        File file = new File(backupConfig.getBackupDir());
+        File dir = new File(backupConfig.getBackupDir());
 
-        if (!file.exists()) return List.of();
-        return Arrays.stream(file.listFiles())
-                .map(File::getName)
+        if (!dir.exists()) return List.of();
+        return Arrays.stream(dir.listFiles())
+                .map(file -> Map.of(
+                        "name", file.getName(),
+                        "size", String.format("%.1f GB", file.length() / 1e9),
+                        "date", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(file.lastModified())),
+                        "database", backupConfig.getDbName()
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -48,5 +53,16 @@ public class BackupFileController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                 .body(resource);
+    }
+
+    @DeleteMapping("/delete/{fileName}")
+    public ResponseEntity<String> deleteBackupFile(@PathVariable String fileName) {
+        BackupConfig config = backupConfigRepository.findById(1L).orElseThrow();
+        File file = new File(config.getBackupDir(), fileName);
+        if (file.exists() && file.delete()) {
+            return ResponseEntity.ok("✅ 备份文件已删除");
+        } else {
+            return ResponseEntity.status(500).body("❌ 删除失败");
+        }
     }
 }
