@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8">
+<head>
+    <meta charset="UTF-8">
+    <title>数据库备份管理</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function executeBackup() {
+            $.ajax({
+                type: "POST",
+                url: "/backup/execute",
+                success: function(response) {
+                    alert(response);
+                    loadBackupFiles(); // 重新加载文件列表
+                },
+                error: function(xhr) {
+                    alert("❌ 备份失败: " + xhr.responseText);
+                }
+            });
+        }
+
+        function loadBackupFiles() {
+            $.ajax({
+                type: "GET",
+                url: "/files",
+                success: function(files) {
+                    let fileTable = $("#fileTable tbody");
+                    fileTable.empty();
+                    if (files.length === 0) {
+                        fileTable.append("<tr><td colspan='2'>暂无备份文件</td></tr>");
+                    } else {
+                        files.forEach(file => {
+                            fileTable.append(
+                                `<tr>
+                                    <td>${file}</td>
+                                    <td><a href="/files/download/${file}" download>下载</a></td>
+                                </tr>`
+                            );
+                        });
+                    }
+                },
+                error: function() {
+                    alert("❌ 无法加载备份文件");
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            loadBackupFiles(); // 页面加载时获取备份文件列表
+        });
+    </script>
+</head>
+<body>
+
+<h2>数据库备份管理</h2>
+
+<!-- 备份配置信息 -->
+<table border="1">
+    <tr><th>参数</th><th>值</th></tr>
+    <tr><td>数据库主机</td><td th:text="${backupConfig.dbHost}"></td></tr>
+    <tr><td>数据库端口</td><td th:text="${backupConfig.dbPort}"></td></tr>
+    <tr><td>数据库名称</td><td th:text="${backupConfig.dbName}"></td></tr>
+    <tr><td>备份目录</td><td th:text="${backupConfig.backupDir}"></td></tr>
+</table>
+
+<!-- 立即备份按钮 -->
+<button onclick="executeBackup()">立即备份</button>
+
+<h3>备份文件列表</h3>
+
+<!-- 备份文件列表 -->
+<table id="fileTable" border="1">
+    <thead>
+    <tr><th>文件名</th><th>操作</th></tr>
+    </thead>
+    <tbody>
+    <tr><td colspan="2">加载中...</td></tr>
+    </tbody>
+</table>
+
+</body>
+</html>

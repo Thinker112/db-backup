@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>MySQL 备份配置</title>
+</head>
+<meta charset="UTF-8"/>
+<body>
+    <h2>MySQL 备份配置</h2>
+    <form action="/config/save" method="post">
+        <label>数据库名称：</label>
+        <input type="text" name="dbName" th:value="${config.dbName}" required><br><br>
+
+        <label>MySQL 用户名：</label>
+        <input type="text" name="dbUser" th:value="${config.dbUser}" required><br><br>
+
+        <label>MySQL 密码：</label>
+        <input type="password" name="dbPassword" th:value="${config.dbPassword}" required><br><br>
+
+        <label>MySQL 主机：</label>
+        <input type="text" name="dbHost" th:value="${config.dbHost}" required><br><br>
+
+        <label>MySQL 端口：</label>
+        <input type="number" name="dbPort" th:value="${config.dbPort}" required><br><br>
+
+        <label>备份目录：</label>
+        <input type="text" name="backupDir" th:value="${config.backupDir}" required><br><br>
+
+        <label>定时任务 (Cron 表达式)：</label>
+        <input type="text" name="scheduleCron" th:value="${config.scheduleCron ?: '0 0 2 * * ?'}" required><br><br>
+
+        <label>备份保留天数：</label>
+        <input type="number" name="retentionDays" th:value="${config.retentionDays}" required><br><br>
+
+        <label>最大备份文件数：</label>
+        <input type="number" name="maxBackupFiles" th:value="${config.maxBackupFiles}" required><br><br>
+
+        <label>最大磁盘占用 (GB)：</label>
+        <input type="number" name="maxDiskUsageGb" th:value="${config.maxDiskUsageGb}" required><br><br>
+
+        <button type="submit">保存</button>
+    </form>
+</body>
+</html>
