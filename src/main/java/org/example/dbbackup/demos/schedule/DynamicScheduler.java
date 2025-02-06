@@ -1,5 +1,6 @@
 package org.example.dbbackup.demos.schedule;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.dbbackup.demos.entity.BackupConfig;
 import org.example.dbbackup.demos.repository.BackupConfigRepository;
 import org.springframework.scheduling.TaskScheduler;
@@ -12,6 +13,8 @@ import java.util.concurrent.ScheduledFuture;
  * @author yueyubo
  * @date 2025-02-05
  */
+
+@Slf4j
 @Service
 public class DynamicScheduler {
 
@@ -32,9 +35,9 @@ public class DynamicScheduler {
             scheduledTask.cancel(false);
         }
 
-        BackupConfig config = backupConfigRepository.findById(1L).orElse(new BackupConfig());
+        BackupConfig config = backupConfigRepository.findById(1L).get();
         String cron = config.getScheduleCron();
-
+        log.info("[backup-scheduler]-cron: {}", cron);
         scheduledTask = taskScheduler.schedule(backupService::executeBackup, new CronTrigger(cron));
     }
 }
