@@ -36,7 +36,7 @@ public class BackupFileController {
         return Arrays.stream(dir.listFiles())
                 .map(file -> Map.of(
                         "name", file.getName(),
-                        "size", String.format("%.1f GB", file.length() / 1e9),
+                        "size", String.format("%.2f MB", file.length() / (1024.0 * 1024)),
                         "date", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(file.lastModified())),
                         "database", backupConfig.getDbName()
                 ))

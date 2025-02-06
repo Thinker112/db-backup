@@ -1,45 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8">
 <head>
     <meta charset="UTF-8">
     <title>数据库备份管理</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // 加载备份文件列表
-        function loadBackupFiles() {
-            $.ajax({
-                type: "GET",
-                url: "/files",
-                success: function(files) {
-                    let fileTable = $("#fileTable tbody");
-                    fileTable.empty();
-                    if (files.length === 0) {
-                        fileTable.append("<tr><td colspan='5' class='text-center'>暂无备份文件</td></tr>");
-                    } else {
-                        files.forEach(file => {
-                            fileTable.append(
-                                `<tr>
-                                    <td>${file.name}</td>
-                                    <td>${file.size}</td>
-                                    <td>${file.date}</td>
-                                    <td>${file.database}</td>
-                                    <td>
-                                        <a href="/files/download/${file.name}" class="btn btn-sm btn-primary">⬇️</a>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteBackup('${file.name}')">🗑️</button>
-                                    </td>
-                                </tr>`
-                            );
-                        });
-                    }
-                },
-                error: function() {
-                    alert("❌ 无法加载备份文件");
-                }
-            });
-        }
-
-        // 触发立即备份
         function executeBackup() {
             $.ajax({
                 type: "POST",
@@ -54,18 +20,31 @@
             });
         }
 
-        // 删除备份文件
-        function deleteBackup(fileName) {
-            if (!confirm("确定要删除该备份文件吗？")) return;
+        function loadBackupFiles() {
             $.ajax({
-                type: "DELETE",
-                url: "/files/delete/" + fileName,
-                success: function() {
-                    alert("✅ 备份文件已删除");
-                    loadBackupFiles();
+                type: "GET",
+                url: "/files",
+                success: function(files) {
+                    let fileTable = $("#fileTable tbody");
+                    fileTable.empty();
+                    if (files.length === 0) {
+                        fileTable.append("<tr><td colspan='2'>暂无备份文件</td></tr>");
+                    } else {
+                        files.forEach(file => {
+                            fileTable.append(
+                                `<tr>
+                                    <td>${file.name}</td>
+                                    <td>${file.size}</td>
+                                    <td>${file.date}</td>
+                                    <td>${file.database}</td>
+                                    <td><a href="/files/download/${file.name}" download>下载</a></td>
+                                </tr>`
+                            );
+                        });
+                    }
                 },
                 error: function() {
-                    alert("❌ 删除失败");
+                    alert("❌ 无法加载备份文件");
                 }
             });
         }
@@ -75,68 +54,33 @@
         });
     </script>
 </head>
-<body class="container mt-4">
+<body>
 
-<!-- 数据库连接信息 -->
-<div class="card mb-4">
-    <div class="card-header">Database Connections</div>
-    <div class="card-body">
-        <table class="table">
-            <thead>
-            <tr><th>Name</th><th>Host</th><th>Port</th><th>Database</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>Production DB</td>
-                <td th:text="${backupConfig.dbHost}"></td>
-                <td th:text="${backupConfig.dbPort}"></td>
-                <td th:text="${backupConfig.dbName}"></td>
-                <td><a href="#" class="text-primary">Edit</a></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+<h2>数据库备份管理</h2>
 
-<!-- 备份计划配置 -->
-<div class="card mb-4">
-    <div class="card-header">Backup Schedule Configuration</div>
-    <div class="card-body">
-        <div class="mb-3">
-            <label class="form-label">Schedule Type</label>
-            <select class="form-select">
-                <option>Daily</option>
-                <option>Weekly</option>
-                <option>Monthly</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Time</label>
-            <input type="time" class="form-control">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Backup Location</label>
-            <input type="text" class="form-control" th:value="${backupConfig.backupDir}">
-        </div>
-        <button class="btn btn-primary">💾 Save Schedule</button>
-        <button class="btn btn-outline-secondary" onclick="executeBackup()">⏳ Backup Now</button>
-    </div>
-</div>
+<!-- 备份配置信息 -->
+<table border="1">
+    <tr><th>参数</th><th>值</th></tr>
+    <tr><td>数据库主机</td><td th:text="${backupConfig.dbHost}"></td></tr>
+    <tr><td>数据库端口</td><td th:text="${backupConfig.dbPort}"></td></tr>
+    <tr><td>数据库名称</td><td th:text="${backupConfig.dbName}"></td></tr>
+    <tr><td>备份目录</td><td th:text="${backupConfig.backupDir}"></td></tr>
+</table>
+
+<!-- 立即备份按钮 -->
+<button onclick="executeBackup()">立即备份</button>
+
+<h3>备份文件列表</h3>
 
 <!-- 备份文件列表 -->
-<div class="card">
-    <div class="card-header">Backup Files</div>
-    <div class="card-body">
-        <table class="table" id="fileTable">
-            <thead>
-            <tr><th>Filename</th><th>Size</th><th>Date</th><th>Database</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-            <tr><td colspan="5" class="text-center">加载中...</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+<table id="fileTable" border="1">
+    <thead>
+    <tr><th>文件名</th><th>大小</th><th>日期</th><th>数据库名称</th><th>操作</th></tr>
+    </thead>
+    <tbody>
+    <tr><td colspan="2">加载中...</td></tr>
+    </tbody>
+</table>
 
 </body>
 </html>
